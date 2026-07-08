@@ -1,3 +1,6 @@
+## Project structure
+```shell
+
 linkedin_scraper/
     config.py
     login.py
@@ -6,17 +9,10 @@ linkedin_scraper/
     models.py
     database.py
     utils.py
+    database.py
     requirements.txt
 
     output/
     user_data/
 
---------
-
-config.py
-models.py
-utils.py
-database.py
-parser.py
-scraper.py
-login.py
+```
