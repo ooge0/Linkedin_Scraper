@@ -24,3 +24,8 @@ htmlcov/
 # Virtualenv -- .venv already carries its own internal .gitignore, this
 # is a backstop in case that ever isn't true
 .venv/
+
+# Scratch output of src/combine.sh -- a generated dump of all .py files
+# for pasting into a chat, regenerated on demand and already stale
+# (last run predates most of src/), not something to keep in sync
+src/combined_python_files.md
