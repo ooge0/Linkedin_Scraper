@@ -1,1 +1,26 @@
 .idea
+docs/_build/
+allure-results/
+allure-report/
+user_data
+output
+
+# Logs -- whole directories, not just scraper.log by name (login.log and
+# any other file in here was slipping through the old filename-only
+# pattern, which kept logs/ and src/logs/ showing up as untracked)
+logs/
+src/logs/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtualenv -- .venv already carries its own internal .gitignore, this
+# is a backstop in case that ever isn't true
+.venv/

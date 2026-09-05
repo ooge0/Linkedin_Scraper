@@ -1,0 +1,62 @@
+# =============================================================
+#  claudeignore — linkedin_parser
+#  Hides generated artifacts, data dumps, vendored libs, and
+#  caches from Claude Code's context. Keeps real ыкс + docs
+#  source + config visible.
+# =============================================================
+
+# --- user data (list of folders where stored user personal data for the browser session. it should be hidden from Claude Code ) ---
+src/user_data
+
+# --- Logs ---
+logs/
+*.log
+
+# --- Sphinx: hide GENERATED build only, keep .rst/conf.py source visible ---
+docs/build/
+**/_build/
+*.doctree
+*.pickle
+*.inv
+*.buildinfo
+.nojekyll
+
+
+# --- Tooling / build caches ---
+**/.tox/
+**/.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+allure-results/
+allure-report/
+
+# --- Python bytecode / cache ---
+**/__pycache__/
+*.pyc
+*.pyo
+
+# --- Model / weight artifacts (kept from prior file; safe defaults) ---
+*.pt
+*.pth
+*.safetensors
+*.onnx
+*.bin
+*.ckpt
+checkpoints/
+
+# --- Scratch / backups / archives ---
+*.bak
+*.TAG
+*.zip
+
+# --- VCS / editor / OS ---
+.git/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

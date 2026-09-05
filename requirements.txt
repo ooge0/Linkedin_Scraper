@@ -1,0 +1,13 @@
+playwright
+pytest-playwright
+allure-pytest
+loguru
+pydantic
+pytest
+pytest-bdd
+sphinx
+sphinx-rtd-theme
+sphinxcontrib-mermaid
+fastapi
+uvicorn[standard]
+httpx
