@@ -48,7 +48,8 @@ here and risking the two drifting apart).
 
 A FastAPI + React UI on top of `output/jobs.db`, for filtering/sorting
 scraped jobs, tracking application status and notes, and recalculating a
-weighted match score without re-scraping. Setup is in
+weighted match score without re-scraping. Setup (including how to stop
+the backend/frontend once they're running) is in
 `docs/installation.rst`; architecture, API surface, and build status are
 in `docs/roadmap.rst`.
 

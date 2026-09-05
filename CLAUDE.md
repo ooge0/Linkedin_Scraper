@@ -330,19 +330,28 @@ after it (already happened twice: `job_url`, then
 
 When the web app shows "Failed to load jobs" and the scraper *isn't*
 running (if it is, see the WAL/locking entry below instead) — check for a
-port mismatch before suspecting a code bug, in this order:
+port mismatch (or a backend that just isn't running) before suspecting a
+code bug, in this order:
 
 1. Is anything actually listening on the port `webapp/frontend/.env`'s
    `VITE_API_URL` points at? (`netstat -ano` on Windows, filter for that
    port's `LISTENING` line, then `Get-CimInstance Win32_Process -Filter
-   "ProcessId=<pid>"` to see what it actually is.) This has already
-   happened twice for different reasons: an unrelated local project's
-   FastAPI server happened to already be running on the same default
-   port (8000) the docs recommend, and later `.env` was left pointing at
-   a port the backend had since moved off of. Neither is a code bug —
-   just make `.env` match wherever this project's own
-   `webapp.backend.main:app` is actually listening, then restart the
-   Vite dev server (`.env` is only read at startup, not hot-reloaded).
+   "ProcessId=<pid>"` to see what it actually is.) Three variants of this
+   have happened for real: an unrelated local project's FastAPI server
+   happened to already be running on the same default port (8000) the
+   docs recommend, `.env` was left pointing at a port the backend had
+   since moved off of, and — the simplest one, easy to overlook because
+   the page still looks normal — the backend process had simply been
+   stopped while the frontend's dev server was left running. The backend
+   and frontend are independent processes; the frontend is just a static
+   dev server, so it keeps serving the React app fine with the backend
+   dead, and every API call inside it just fails instead. None of these
+   is a code bug — either restart the backend, or make `.env` match
+   wherever `webapp.backend.main:app` is actually listening and restart
+   the Vite dev server (`.env` is only read at startup, not
+   hot-reloaded). See `docs/installation.rst`'s "Stopping the app" for
+   how to find and stop either process by port when there's no terminal
+   to `Ctrl+C` in.
 2. Confirm the *right* backend is up with `curl
    http://127.0.0.1:<port>/api/health` and `/api/jobs?limit=1` — if
    those 404 or return something that isn't this project's JSON shape,

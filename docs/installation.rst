@@ -92,6 +92,38 @@ not a separate install. Only the frontend needs its own.
    ``webapp/backend/main.py`` allows any ``localhost``/``127.0.0.1`` port,
    not just 5173, so a different port works too if 5173 is taken).
 
+Stopping the app
+~~~~~~~~~~~~~~~~~~
+
+The backend and frontend are two independent processes -- stopping one
+doesn't stop the other. This matters because the frontend is *just* a
+static dev server: it keeps serving the React app (the page, the table,
+the buttons) even with the backend dead, so the symptom of "backend
+stopped, frontend still running" isn't a blank page -- it's a normal-
+looking page with `Error: Failed to load jobs` where the data should be,
+because every ``fetch`` the page makes to ``VITE_API_URL`` has nothing to
+answer it. See the "Failed to load jobs" entry in ``CLAUDE.md``'s
+Debugging Checklist for the full diagnostic if that happens unexpectedly
+rather than because you stopped something on purpose.
+
+To stop either one:
+
+- **If it's running in a terminal you're looking at**: ``Ctrl+C``. With
+  ``--reload`` on the backend, Windows sometimes needs it twice -- once
+  for the reloader process, once for the actual worker.
+- **If it's detached and you don't have that terminal** (find the PID by
+  the port it's on, then kill it)::
+
+      Get-NetTCPConnection -LocalPort 8000 | Select-Object OwningProcess
+      Stop-Process -Id <PID> -Force
+
+  (swap ``8000`` for ``5173`` to stop the frontend instead). The
+  ``netstat``/``taskkill`` equivalent, if ``Get-NetTCPConnection`` isn't
+  available::
+
+      netstat -ano | findstr :8000
+      taskkill /F /PID <PID>
+
 See :doc:`roadmap` for the full architecture, API surface, and build
 status.
 

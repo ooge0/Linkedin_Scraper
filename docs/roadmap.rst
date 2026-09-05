@@ -615,3 +615,10 @@ which launches your installed Chrome) -- if this is a fresh environment::
 Excluded from the default ``pytest tests/`` run (see :doc:`qa`) since it
 needs Node/npm and takes noticeably longer -- run it explicitly, and
 before considering frontend or API-contract changes done.
+
+Stopping either one is just ``Ctrl+C`` in its terminal (backend and
+frontend are independent processes -- stopping one leaves the other
+running, which shows up as the frontend's page loading fine but every
+API call failing). See :doc:`installation`'s "Stopping the app" for the
+full explanation and the command to use when the process is detached and
+there's no terminal to ``Ctrl+C`` in.
