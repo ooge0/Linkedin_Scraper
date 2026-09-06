@@ -97,6 +97,27 @@ After changing criteria, recompute scores for every job in one shot
     # or against a specific DB file:
     .venv\Scripts\python.exe src\recalculate_scores.py --db output\jobs.playground.db
 
+Merging in a CSV from another machine
+----------------------------------------
+
+For a setup where one machine holds the canonical database and scrapes
+happen elsewhere (e.g. a Raspberry Pi as the always-on "core" machine,
+a laptop doing the actual scraping and pushing its ``output/jobs.csv``
+over by scp/rsync/whatever afterwards) -- ``import_csv.py`` merges a CSV
+in ``export_csv()``'s format into a target database through the same
+``Database.insert_job()`` path a live scrape uses::
+
+    .venv\Scripts\python.exe src\import_csv.py path\to\jobs.csv
+
+    # or against a specific DB file:
+    .venv\Scripts\python.exe src\import_csv.py path\to\jobs.csv --db output\jobs.playground.db
+
+A ``job_id`` already in the target database -- including any status,
+notes, or interview date edited since in the web app -- is left
+completely untouched; only genuinely new job ids are added. Getting the
+CSV onto this machine in the first place is outside this script's
+concern.
+
 Available statuses
 --------------------
 

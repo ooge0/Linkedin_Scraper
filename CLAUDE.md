@@ -53,7 +53,8 @@ linkedin_scrapper/
 │   ├── login.py               # One-time session bootstrap (run manually)
 │   ├── rate_limiter.py        # Sliding-hour request cap (REQUESTS_PER_HOUR)
 │   ├── scoring.py             # Weighted keyword match scoring (pure functions)
-│   └── recalculate_scores.py  # CLI: recompute match_score for every job, no re-scrape
+│   ├── recalculate_scores.py  # CLI: recompute match_score for every job, no re-scrape
+│   └── import_csv.py          # CLI: merge a jobs CSV exported elsewhere into a DB
 │
 ├── webapp/                    # FastAPI + React job-tracker UI on top of output/jobs.db
 │   ├── backend/                # FastAPI app (see docs/roadmap.rst for the API surface)
@@ -246,6 +247,14 @@ LinkedIn's own ban/restriction behavior.
   `Database.get_jobs_since()`
 - ✅ `--json` flag also writes `output/jobs.json` (same row set as the CSV,
   as a JSON array) for downstream pipeline consumption
+- ✅ `import_csv.py` — the reverse direction: merges a CSV from
+  `export_csv()` (scraped on another machine, moved over by whatever
+  means — scp/rsync, not this project's concern) into a target database
+  through the same `Database.insert_job()` path a live scrape uses, so a
+  job already in the target DB (including any status/notes edited since)
+  is left untouched; only genuinely-new `job_id`s are added. Built for a
+  "one machine holds the canonical DB, scrapes done elsewhere get pushed
+  into it" setup — see `docs/roadmap.rst` for the full writeup.
 
 ### Stage 7 — Proxy / multi-profile support
 

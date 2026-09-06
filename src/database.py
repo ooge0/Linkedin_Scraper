@@ -284,9 +284,13 @@ class Database:
 
     # ------------------------------------------------------------------
 
-    def insert_job(self, job: Job):
+    def insert_job(self, job: Job) -> bool:
         """
-        Save vacancy.
+        Save vacancy. Returns True if a new row was inserted, False if
+        job_id already existed and the INSERT OR IGNORE was a no-op --
+        lets a caller (e.g. import_csv.py, importing jobs scraped
+        elsewhere) report how many were actually new without a separate
+        job_exists() lookup per row.
         """
 
         self.cursor.execute(
@@ -408,6 +412,8 @@ class Database:
         )
 
         self.connection.commit()
+
+        return self.cursor.rowcount > 0
 
     # ------------------------------------------------------------------
 

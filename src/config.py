@@ -11,7 +11,7 @@ from urllib.parse import urlencode
 # Search parameters
 # ----------------------------------------------------------------------
 
-SEARCH_KEYWORD = "trading QA"
+SEARCH_KEYWORD = "general QA"
 SEARCH_LOCATION = "Remote"
 
 # Optional LinkedIn search filters

@@ -575,6 +575,57 @@ existing notes/status E2E test extended to also cover the interview-date
 field surviving a reload. Full suite green: 106 fast + 20 E2E (up from
 98 + 17) tests, all passing.
 
+Post-W5: CSV import, for a "Pi holds the canonical DB" deployment
+----------------------------------------------------------------------
+
+Prompted by a deployment plan: run scrapes wherever, but keep one
+machine (a Raspberry Pi 4, in the case that prompted this) as the single
+source of truth for the database the web app reads. Two ways to get a
+remote scrape's results into that canonical DB were considered --
+exposing the webapp itself over the network (rejected: this app has zero
+authentication, built for a single local user, so WAN/LAN exposure is a
+separate and much bigger piece of work than what follows here), and
+pushing the *scraped data* to the Pi instead. The scraper already writes
+a CSV every run (``export_csv()``); the missing half was reading one
+back in.
+
+- **``src/import_csv.py``** (new, same CLI shape as
+  ``recalculate_scores.py``): reads a CSV in ``export_csv()``'s format
+  and, for each row, calls ``Database.insert_job()`` -- the *exact* code
+  path a live scrape uses, not a separate bulk-load query. That matters
+  because it means a pushed row is subject to the same rules a locally-
+  scraped one would be, automatically, with no new merge logic to keep
+  in sync as those rules evolve.
+- **``Database.insert_job()`` now returns ``bool``** (``True`` = new row
+  inserted, ``False`` = ``job_id`` already existed and the
+  ``INSERT OR IGNORE`` was a no-op) instead of implicitly ``None`` --
+  additive and backward compatible, every existing call site already
+  ignored the return value. This is what lets ``import_csv.py`` report
+  accurate added/skipped counts without a separate ``job_exists()``
+  lookup per row, and it's the guarantee the whole feature depends on:
+  a job already in the target DB -- including any status/notes/
+  interview-date you've since edited in the web app -- is left
+  completely untouched by a re-import, never overwritten.
+- Getting the CSV from the scraping machine to the Pi (scp, rsync,
+  whatever triggers it) is deliberately outside this script's concern --
+  it only handles what happens once the file is already there.
+
+Verified with 9 new tests: 2 at the DB layer
+(``test_insert_job_returns_true_when_the_row_is_new``,
+``test_insert_job_returns_false_and_does_not_overwrite_an_existing_row``)
+and 7 in the new ``tests/test_import_csv.py`` (the ``skills``/
+``match_score`` string<->Python round trip, a full export-then-import
+round trip through real temp files preserving every field, skipping an
+already-known job, and adding only the new job out of a mixed batch).
+Also smoke-tested manually end to end as the actual CLI (not just the
+unit-tested functions): exported a small DB to CSV, ran
+``python import_csv.py`` against a fresh target DB (2 added, 0 skipped),
+ran it again unchanged (0 added, 2 skipped), and confirmed every field
+-- including ``skills``, ``match_score``, and the target DB's own
+``job_url`` backfill -- round-tripped correctly. No E2E tests needed
+(no frontend/API-contract code changed). Full suite green: 115 fast + 20
+E2E (up from 106 + 20), all passing.
+
 Running the app (filled in as each stage lands)
 ------------------------------------------------
 

@@ -2,7 +2,7 @@ QA & Testing
 =============
 
 This page is regenerated from the actual test suite, not hand-maintained
-prose -- the numbers below (126 tests, coverage percentages) came from
+prose -- the numbers below (135 tests, coverage percentages) came from
 running ``pytest`` and ``pytest --cov`` directly against this codebase.
 If they look stale, re-run the commands in `Test coverage`_ and update
 this page rather than trusting it blindly.
@@ -58,7 +58,7 @@ after.
 Test inventory
 ----------------
 
-126 tests total, across 14 files: 106 fast ones (no Node/npm, no real
+135 tests total, across 15 files: 115 fast ones (no Node/npm, no real
 browser) plus 20 E2E ones. Run the fast suite with::
 
     .venv\Scripts\python.exe -m pytest tests/ --ignore=tests/e2e -v
@@ -103,14 +103,17 @@ horizontal whitespace without touching line breaks, and handles
 ``\xa0``/empty input -- see the traceability matrix for the bug this
 exists to fix.
 
-Database layer -- ``tests/backend/test_database_extensions.py`` (34 tests)
+Database layer -- ``tests/backend/test_database_extensions.py`` (36 tests)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Direct ``Database`` class tests against a temp SQLite file: job lookup,
-partial status/notes/interview-date updates (incl. that setting a status
-stamps ``status_updated_at``, that a notes-only update does *not*, and
-that an empty-string ``interview_date`` clears it rather than being
-treated as "leave alone" -- same convention as ``notes``),
+that ``insert_job()`` reports whether it actually inserted a row
+(``True``) or left an existing ``job_id`` untouched (``False``, doing
+neither an overwrite nor a merge -- the property ``import_csv.py`` below
+depends on), partial status/notes/interview-date updates (incl. that
+setting a status stamps ``status_updated_at``, that a notes-only update
+does *not*, and that an empty-string ``interview_date`` clears it rather
+than being treated as "leave alone" -- same convention as ``notes``),
 filter/sort/paginate (incl. the per-column ``column_filters`` map backing
 the Jobs page's filter row -- including ``salary``/``employment_type``/
 ``seniority``/``applicants``, its Gmail-style ``-term`` exclude syntax,
@@ -125,6 +128,21 @@ blocking on the scraper's writer), and that a ``Database`` can be used
 from a different thread than it was created on (deterministic regression
 test for a real intermittent E2E failure -- see the concurrency rows in
 the traceability matrix for both).
+
+CSV import -- ``tests/test_import_csv.py`` (7 tests)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``import_csv.py`` merges a jobs CSV exported elsewhere (``runner.py``'s
+``export_csv()`` format) into a target database, for a "one machine
+holds the canonical DB, scrapes done on another machine get pushed into
+it" setup. Tests focus on what only this layer can see -- the CSV row
+round trip, not ``insert_job()``'s own no-overwrite behavior, already
+proven above: ``skills`` splits back into a list (and an empty string
+becomes no skills, not ``[""]``), ``match_score`` converts an empty cell
+to ``None`` and a numeric one to a ``float``, a full export/import round
+trip through real files preserves every field, an already-known
+``job_id`` is skipped rather than overwritten, and a mixed batch (one
+known job, one new) adds only the genuinely new one.
 
 Match scoring -- ``tests/backend/test_scoring.py`` (11 tests)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -453,6 +471,21 @@ this table, by the E2E suite.
    * - UI: interview date can be set on the job detail page and survives a reload
      - ``test_open_job_detail_and_edit_notes_and_status``
      - E2E
+   * - DB: ``insert_job()`` reports whether a row was actually new (``True``) or an existing ``job_id`` was left untouched (``False``)
+     - ``test_insert_job_returns_true_when_the_row_is_new``,
+       ``test_insert_job_returns_false_and_does_not_overwrite_an_existing_row``
+     - DB unit
+   * - CLI: importing an exported CSV adds only genuinely-new jobs, preserving every field through the round trip, and never overwrites a job already in the target DB
+     - ``test_import_csv_round_trips_a_real_export``,
+       ``test_import_csv_skips_jobs_that_already_exist_in_the_target``,
+       ``test_import_csv_adds_only_the_genuinely_new_jobs_from_a_mixed_batch``
+     - ``tests/test_import_csv.py``
+   * - CLI: CSV row parsing correctly reverses ``export_csv()``'s two lossy-for-round-tripping conversions (``skills`` joined to a string, ``match_score`` written as empty for ``NULL``)
+     - ``test_row_to_job_splits_skills_back_into_a_list``,
+       ``test_row_to_job_treats_empty_skills_as_no_skills``,
+       ``test_row_to_job_converts_empty_match_score_to_none``,
+       ``test_row_to_job_converts_numeric_match_score_to_float``
+     - ``tests/test_import_csv.py``
 
 Test coverage
 ---------------
@@ -526,7 +559,7 @@ Generated with::
      - 83%
      - The sys.path-guard branch (already-inserted case)
    * - ``database.py``
-     - 196
+     - 197
      - 34
      - 83%
      - Mostly the one-time schema-migration branches (``ALTER TABLE`` for
@@ -568,10 +601,18 @@ Generated with::
      - 0%
      - Thin CLI wrapper; its actual logic (``recalculate_all_scores``) is
        ``scoring.py``, which is 100% covered
+   * - ``import_csv.py``
+     - 40
+     - 12
+     - 70%
+     - The ``_row_to_job``/``import_csv`` logic (the actual CSV<->DB
+       conversion) is fully covered by ``tests/test_import_csv.py``; the
+       missed lines are ``argparse``/``main()`` CLI plumbing, same
+       category as ``recalculate_scores.py`` above
    * - **TOTAL**
-     - **1070**
-     - **412**
-     - **61%**
+     - **1111**
+     - **424**
+     - **62%**
      -
 
 The low numbers are concentrated entirely in code that talks to a real

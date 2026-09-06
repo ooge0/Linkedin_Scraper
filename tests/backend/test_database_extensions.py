@@ -83,6 +83,22 @@ def test_get_job_returns_the_matching_row(db):
     assert row["title"] == "Job 1"
 
 
+def test_insert_job_returns_true_when_the_row_is_new(db):
+    assert db.insert_job(make_job("1")) is True
+
+
+def test_insert_job_returns_false_and_does_not_overwrite_an_existing_row(db):
+    db.insert_job(make_job("1", title="Original title"))
+    db.update_job_status("1", notes="don't lose this")
+
+    inserted = db.insert_job(make_job("1", title="A different title from a re-import"))
+
+    assert inserted is False
+    row = db.get_job("1")
+    assert row["title"] == "Original title"
+    assert row["notes"] == "don't lose this"
+
+
 # ------------------------------------------------------- update_job_status
 
 def test_update_job_status_updates_only_status(db):
